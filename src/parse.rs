@@ -13,12 +13,26 @@ use nom::{
     IResult,
 };
 
-fn from_hex(input: &str) -> Result<u8, ParseIntError> {
-    u8::from_str_radix(input, 16)
+/// Open command.
+#[derive(Debug, PartialEq)]
+struct Open<'a> {
+    interface: &'a str,
 }
 
-fn is_hex_digit(c: char) -> bool {
-    c.is_digit(16)
+impl<'a> Open<'a> {
+    /// Parse ASCII command.
+    ///
+    /// Format:
+    /// `< open interface >`
+    fn parse_from_ascii(input: &'a str) -> IResult<&str, Self> {
+        let (input, interface) = delimited(
+            tuple((char('<'), space1, tag("open"), space1)),
+            take_while1(|c: char| !c.is_whitespace() && c != '>'),
+            tuple((space1, char('>'))),
+        )(input)?;
+
+        Ok((input, Open { interface }))
+    }
 }
 
 /// Frame job add command.
@@ -178,32 +192,39 @@ impl Send {
 }
 
 #[derive(Debug)]
-enum Command {
+enum Command<'a> {
+    Open(Open<'a>),
     Add(Add),
     Update(Update),
     Delete(Delete),
     Send(Send),
 }
 
-impl From<Add> for Command {
+impl<'a> From<Open<'a>> for Command<'a> {
+    fn from(value: Open<'a>) -> Self {
+        Command::Open(value)
+    }
+}
+
+impl From<Add> for Command<'_> {
     fn from(value: Add) -> Self {
         Command::Add(value)
     }
 }
 
-impl From<Update> for Command {
+impl From<Update> for Command<'_> {
     fn from(value: Update) -> Self {
         Command::Update(value)
     }
 }
 
-impl From<Delete> for Command {
+impl From<Delete> for Command<'_> {
     fn from(value: Delete) -> Self {
         Command::Delete(value)
     }
 }
 
-impl From<Send> for Command {
+impl From<Send> for Command<'_> {
     fn from(value: Send) -> Self {
         Command::Send(value)
     }
@@ -223,10 +244,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_integer() {
-        assert_eq!(from_hex("5"), Ok(5));
-        assert_eq!(from_hex("0"), Ok(0));
-        assert_eq!(from_hex("F"), Ok(15));
+    fn test_parse_open() {
+        let cases = [("< open can0 >", Open { interface: "can0" })];
+
+        for case in cases {
+            let output = Open::parse_from_ascii(case.0).unwrap();
+            let result = output.1;
+            let expected = case.1;
+
+            assert_eq!(expected, result);
+        }
     }
 
     #[test]
