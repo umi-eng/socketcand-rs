@@ -174,12 +174,59 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Filter {
+    secs: u32,
+    micros: u32,
+    id: u32,
+    dlc: u8,
+    data: Vec<u8, 64>,
+}
+
+fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
+    let (input, (_, secs, micros, id, dlc, data)) = delimited(
+        tuple((char('<'), space1)),
+        tuple((
+            tag("filter "),
+            terminated(map_res(digit1, u32::from_str), char(' ')),
+            terminated(map_res(digit1, u32::from_str), char(' ')),
+            terminated(
+                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
+                char(' '),
+            ),
+            terminated(map_res(digit1, u8::from_str), char(' ')),
+            map(
+                take_while(|c: char| c.is_digit(16) || c == ' '),
+                |bytes: &str| {
+                    bytes
+                        .split_whitespace()
+                        .filter_map(|b| u8::from_str_radix(b, 16).ok())
+                        .collect::<Vec<u8, 64>>()
+                },
+            ),
+        )),
+        char('>'),
+    )(input)?;
+
+    Ok((
+        input,
+        Filter {
+            secs,
+            micros,
+            id,
+            dlc,
+            data,
+        },
+    ))
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Command<'a> {
     Open(Open<'a>),
     Add(Add),
     Update(Update),
     Delete(Delete),
     Send(Send),
+    Filter(Filter),
 }
 
 pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
@@ -189,6 +236,7 @@ pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
         map(update, Command::Update),
         map(delete, Command::Delete),
         map(send, Command::Send),
+        map(filter, Command::Filter),
     ))(input)
 }
 
@@ -262,6 +310,21 @@ mod tests {
                 id: 0x1AAAAAAA,
                 dlc: 2,
                 data: Vec::from_slice(&[0x1, 0xf1]).unwrap(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_filter() {
+        let (_, result) = command("< filter 0 0 123 1 FF >").unwrap();
+        assert_eq!(
+            result,
+            Command::Filter(Filter {
+                secs: 0,
+                micros: 0,
+                id: 0x123,
+                dlc: 1,
+                data: Vec::from_slice(&[0xFF]).unwrap(),
             })
         );
     }
