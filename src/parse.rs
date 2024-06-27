@@ -245,13 +245,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_open() {
+    fn parse_open() {
         let (_, result) = command("< open can0 >").unwrap();
         assert_eq!(result, Command::Open(Open { interface: "can0" }));
     }
 
     #[test]
-    fn test_parse_add() {
+    fn parse_add() {
         let (_, result) =
             command("< add 1 0 123 8 11 22 33 44 55 66 77 88 >").unwrap();
         assert_eq!(
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_update() {
+    fn parse_update() {
         let (_, result) = command("< update 123 3 11 22 33 >").unwrap();
         assert_eq!(
             result,
@@ -283,13 +283,13 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_delete() {
+    fn parse_delete() {
         let (_, result) = command("< delete 123 >").unwrap();
         assert_eq!(result, Command::Delete(Delete { id: 0x123 }));
     }
 
     #[test]
-    fn test_parse_send_no_data() {
+    fn parse_send_no_data() {
         let (_, result) = command("< send 123 0 >").unwrap();
         assert_eq!(
             result,
@@ -302,7 +302,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_send_with_data() {
+    fn parse_send_with_data() {
         let (_, result) = command("< send 1AAAAAAA 2 1 f1 >").unwrap();
         assert_eq!(
             result,
@@ -315,7 +315,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_filter() {
+    fn parse_filter() {
         let (_, result) = command("< filter 0 0 123 1 FF >").unwrap();
         assert_eq!(
             result,
