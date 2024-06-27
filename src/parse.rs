@@ -173,6 +173,7 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
     Ok((input, Send { id, dlc, data }))
 }
 
+/// Content filter command.
 #[derive(Debug, PartialEq)]
 pub struct Filter {
     pub secs: u32,
@@ -219,6 +220,7 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
     ))
 }
 
+/// Echo command.
 #[derive(Debug, PartialEq)]
 pub struct Echo;
 
@@ -228,6 +230,7 @@ fn echo<'a>(input: &'a str) -> IResult<&'a str, Echo> {
     Ok((input, Echo))
 }
 
+/// Enter raw mode command.
 #[derive(Debug, PartialEq)]
 pub struct RawMode;
 
@@ -237,6 +240,9 @@ fn raw_mode<'a>(input: &'a str) -> IResult<&'a str, RawMode> {
     Ok((input, RawMode))
 }
 
+/// Enter broadcast mode command.
+///
+/// Broadcase mode is the default mode.
 #[derive(Debug, PartialEq)]
 pub struct BroadcastMode;
 
@@ -246,6 +252,7 @@ fn broadcast_mode<'a>(input: &'a str) -> IResult<&'a str, BroadcastMode> {
     Ok((input, BroadcastMode))
 }
 
+/// Enter control mode command.
 #[derive(Debug, PartialEq)]
 pub struct ControlMode;
 
@@ -255,6 +262,7 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
     Ok((input, ControlMode))
 }
 
+/// Statistics setting command.
 #[derive(Debug, PartialEq)]
 pub struct Statistics {
     pub interval_millis: u32,
@@ -273,6 +281,7 @@ fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
     Ok((input, Statistics { interval_millis }))
 }
 
+/// Command instance.
 #[derive(Debug, PartialEq)]
 pub enum Command<'a> {
     Open(Open<'a>),
