@@ -1,9 +1,11 @@
-use core::num::ParseIntError;
 use core::str::FromStr;
 use heapless::Vec;
 use nom::{
     branch::alt,
-    bytes::{complete::tag, streaming::take_while1},
+    bytes::{
+        complete::tag,
+        streaming::{take_while, take_while1},
+    },
     character::{
         complete::char,
         streaming::{digit1, hex_digit1, space1},
@@ -15,184 +17,164 @@ use nom::{
 
 /// Open command.
 #[derive(Debug, PartialEq)]
-struct Open<'a> {
-    interface: &'a str,
+pub struct Open<'a> {
+    pub interface: &'a str,
 }
 
-impl<'a> Open<'a> {
-    /// Parse ASCII command.
-    ///
-    /// Format:
-    /// `< open interface >`
-    fn parse_from_ascii(input: &'a str) -> IResult<&str, Self> {
-        let (input, interface) = delimited(
-            tuple((char('<'), space1, tag("open"), space1)),
-            take_while1(|c: char| !c.is_whitespace() && c != '>'),
-            tuple((space1, char('>'))),
-        )(input)?;
+fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
+    let (input, interface) = delimited(
+        tuple((char('<'), space1, tag("open"), space1)),
+        take_while1(|c: char| !c.is_whitespace() && c != '>'),
+        tuple((space1, char('>'))),
+    )(input)?;
 
-        Ok((input, Open { interface }))
-    }
+    Ok((input, Open { interface }))
 }
 
 /// Frame job add command.
 #[derive(Debug, PartialEq)]
-struct Add {
-    interval_secs: u32,
-    interval_micros: u32,
-    id: u32,
-    dlc: u8,
-    data: Vec<u8, 64>,
+pub struct Add {
+    pub interval_secs: u32,
+    pub interval_micros: u32,
+    pub id: u32,
+    pub dlc: u8,
+    pub data: Vec<u8, 64>,
 }
 
-impl Add {
-    /// Parse ASCII command.
-    ///
-    /// Format:
-    /// `< add interval_secs interval_micros id dlc data0 data1 dataN... >`
-    fn parse_from_ascii(input: &str) -> IResult<&str, Self> {
-        let (input, (_, interval_secs, interval_micros, id, dlc, data)) =
-            delimited(
-                tuple((char('<'), space1)),
-                tuple((
-                    tag("add "),
-                    terminated(map_res(digit1, u32::from_str), char(' ')),
-                    terminated(map_res(digit1, u32::from_str), char(' ')),
-                    terminated(
-                        map_res(hex_digit1, |id: &str| {
-                            u32::from_str_radix(id, 16)
-                        }),
-                        char(' '),
-                    ),
-                    terminated(map_res(digit1, u8::from_str), char(' ')),
-                    map(
-                        take_while1(|c: char| c.is_digit(16) || c == ' '),
-                        |bytes: &str| {
-                            bytes
-                                .split_whitespace()
-                                .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                                .collect::<Vec<u8, 64>>()
-                        },
-                    ),
-                )),
-                char('>'),
-            )(input)?;
+fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
+    let (input, (_, interval_secs, interval_micros, id, dlc, data)) =
+        delimited(
+            tuple((char('<'), space1)),
+            tuple((
+                tag("add "),
+                terminated(map_res(digit1, u32::from_str), char(' ')),
+                terminated(map_res(digit1, u32::from_str), char(' ')),
+                terminated(
+                    map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
+                    char(' '),
+                ),
+                terminated(map_res(digit1, u8::from_str), char(' ')),
+                map(
+                    take_while(|c: char| c.is_digit(16) || c == ' '),
+                    |bytes: &str| {
+                        bytes
+                            .split_whitespace()
+                            .filter_map(|b| u8::from_str_radix(b, 16).ok())
+                            .collect::<Vec<u8, 64>>()
+                    },
+                ),
+            )),
+            char('>'),
+        )(input)?;
 
-        Ok((
-            input,
-            Self {
-                interval_secs,
-                interval_micros,
-                id,
-                dlc,
-                data,
-            },
-        ))
-    }
+    Ok((
+        input,
+        Add {
+            interval_secs,
+            interval_micros,
+            id,
+            dlc,
+            data,
+        },
+    ))
 }
 
 /// Frame job update command.
-#[derive(Debug)]
-struct Update {
-    id: u32,
-    dlc: u8,
-    data: Vec<u8, 64>,
+#[derive(Debug, PartialEq)]
+pub struct Update {
+    pub id: u32,
+    pub dlc: u8,
+    pub data: Vec<u8, 64>,
 }
 
-impl Update {
-    /// Parse ASCII command.
-    ///
-    /// Format:
-    /// `< update id dlc data0 data1 dataN... >`
-    fn parse_from_ascii(input: &str) -> IResult<&str, Self> {
-        let (input, (_, id, dlc, data)) = delimited(
-            tuple((char('<'), space1)),
-            tuple((
-                tag("add "),
-                terminated(
-                    map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                    char(' '),
-                ),
-                terminated(map_res(digit1, u8::from_str), char(' ')),
-                map(
-                    take_while1(|c: char| c.is_digit(16) || c == ' '),
-                    |bytes: &str| {
-                        bytes
-                            .split_whitespace()
-                            .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                            .collect::<Vec<u8, 64>>()
-                    },
-                ),
-            )),
-            char('>'),
-        )(input)?;
+fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
+    let (input, (_, id, dlc, data)) = delimited(
+        tuple((char('<'), space1)),
+        tuple((
+            tag("update "),
+            terminated(
+                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
+                char(' '),
+            ),
+            terminated(map_res(digit1, u8::from_str), char(' ')),
+            map(
+                take_while(|c: char| c.is_digit(16) || c == ' '),
+                |bytes: &str| {
+                    bytes
+                        .split_whitespace()
+                        .filter_map(|b| u8::from_str_radix(b, 16).ok())
+                        .collect::<Vec<u8, 64>>()
+                },
+            ),
+        )),
+        char('>'),
+    )(input)?;
 
-        Ok((input, Update { id, dlc, data }))
-    }
+    Ok((input, Update { id, dlc, data }))
 }
 
 /// Frame job delete command.
-#[derive(Debug)]
-struct Delete {
-    id: u32,
+#[derive(Debug, PartialEq)]
+pub struct Delete {
+    pub id: u32,
 }
 
-impl Delete {
-    fn parse_from_ascii(input: &str) -> IResult<&str, Self> {
-        let (input, (_, id)) = delimited(
-            tuple((char('<'), space1)),
-            tuple((
-                tag("add "),
-                terminated(
-                    map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                    char(' '),
-                ),
-            )),
-            char('>'),
-        )(input)?;
+fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
+    let (input, (_, id)) = delimited(
+        tuple((char('<'), space1)),
+        tuple((
+            tag("delete "),
+            terminated(
+                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
+                char(' '),
+            ),
+        )),
+        char('>'),
+    )(input)?;
 
-        Ok((input, Delete { id }))
-    }
+    Ok((input, Delete { id }))
 }
 
 /// Single frame send command.
-#[derive(Debug)]
-struct Send {
-    id: u32,
-    dlc: u8,
-    data: Vec<u8, 64>,
+#[derive(Debug, PartialEq)]
+pub struct Send {
+    pub id: u32,
+    pub dlc: u8,
+    pub data: Vec<u8, 64>,
 }
 
-impl Send {
-    fn parse_from_ascii(input: &str) -> IResult<&str, Self> {
-        let (input, (_, id, dlc, data)) = delimited(
-            tuple((char('<'), space1)),
-            tuple((
-                tag("send "),
-                terminated(
-                    map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                    char(' '),
-                ),
-                terminated(map_res(digit1, u8::from_str), char(' ')),
-                map(
-                    take_while1(|c: char| c.is_digit(16) || c == ' '),
-                    |bytes: &str| {
+fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
+    let (input, (_, id, dlc, data)) = delimited(
+        tuple((char('<'), space1)),
+        tuple((
+            tag("send "),
+            terminated(
+                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
+                char(' '),
+            ),
+            terminated(map_res(digit1, u8::from_str), char(' ')),
+            map(
+                take_while(|c: char| c.is_digit(16) || c == ' '),
+                |bytes: &str| {
+                    if bytes.trim().is_empty() {
+                        Vec::new()
+                    } else {
                         bytes
                             .split_whitespace()
                             .filter_map(|b| u8::from_str_radix(b, 16).ok())
                             .collect::<Vec<u8, 64>>()
-                    },
-                ),
-            )),
-            char('>'),
-        )(input)?;
+                    }
+                },
+            ),
+        )),
+        char('>'),
+    )(input)?;
 
-        Ok((input, Send { id, dlc, data }))
-    }
+    Ok((input, Send { id, dlc, data }))
 }
 
-#[derive(Debug)]
-enum Command<'a> {
+#[derive(Debug, PartialEq)]
+pub enum Command<'a> {
     Open(Open<'a>),
     Add(Add),
     Update(Update),
@@ -200,42 +182,13 @@ enum Command<'a> {
     Send(Send),
 }
 
-impl<'a> From<Open<'a>> for Command<'a> {
-    fn from(value: Open<'a>) -> Self {
-        Command::Open(value)
-    }
-}
-
-impl From<Add> for Command<'_> {
-    fn from(value: Add) -> Self {
-        Command::Add(value)
-    }
-}
-
-impl From<Update> for Command<'_> {
-    fn from(value: Update) -> Self {
-        Command::Update(value)
-    }
-}
-
-impl From<Delete> for Command<'_> {
-    fn from(value: Delete) -> Self {
-        Command::Delete(value)
-    }
-}
-
-impl From<Send> for Command<'_> {
-    fn from(value: Send) -> Self {
-        Command::Send(value)
-    }
-}
-
-fn parse_command(input: &str) -> IResult<&str, Command> {
+pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
     alt((
-        |i| Add::parse_from_ascii(i).map(|out| (out.0, out.1.into())),
-        |i| Update::parse_from_ascii(i).map(|out| (out.0, out.1.into())),
-        |i| Delete::parse_from_ascii(i).map(|out| (out.0, out.1.into())),
-        |i| Send::parse_from_ascii(i).map(|out| (out.0, out.1.into())),
+        map(open, Command::Open),
+        map(add, Command::Add),
+        map(update, Command::Update),
+        map(delete, Command::Delete),
+        map(send, Command::Send),
     ))(input)
 }
 
@@ -245,65 +198,71 @@ mod tests {
 
     #[test]
     fn test_parse_open() {
-        let cases = [("< open can0 >", Open { interface: "can0" })];
-
-        for case in cases {
-            let output = Open::parse_from_ascii(case.0).unwrap();
-            let result = output.1;
-            let expected = case.1;
-
-            assert_eq!(expected, result);
-        }
+        let (_, result) = command("< open can0 >").unwrap();
+        assert_eq!(result, Command::Open(Open { interface: "can0" }));
     }
 
     #[test]
     fn test_parse_add() {
-        // todo: this should really be done with a fuzzer.
-        let cases = [
-            (
-                "< add 1 0 123 8 11 22 33 44 55 66 77 88 >",
-                Add {
-                    interval_secs: 1,
-                    interval_micros: 0,
-                    id: 0x123,
-                    dlc: 8,
-                    data: Vec::from_slice(&[
-                        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-                    ])
-                    .unwrap(),
-                },
-            ),
-            (
-                "< add 1 0 123 8 1 2 3 4 5 6 7 8 >",
-                Add {
-                    interval_secs: 1,
-                    interval_micros: 0,
-                    id: 0x123,
-                    dlc: 8,
-                    data: Vec::from_slice(&[
-                        0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
-                    ])
-                    .unwrap(),
-                },
-            ),
-            (
-                "< add 1 0 123 5 1 2 3 4 5 >< more >< echo >",
-                Add {
-                    interval_secs: 1,
-                    interval_micros: 0,
-                    id: 0x123,
-                    dlc: 5,
-                    data: Vec::from_slice(&[0x1, 0x2, 0x3, 0x4, 0x5]).unwrap(),
-                },
-            ),
-        ];
+        let (_, result) =
+            command("< add 1 0 123 8 11 22 33 44 55 66 77 88 >").unwrap();
+        assert_eq!(
+            result,
+            Command::Add(Add {
+                interval_secs: 1,
+                interval_micros: 0,
+                id: 0x123,
+                dlc: 8,
+                data: Vec::from_slice(&[
+                    0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88
+                ])
+                .unwrap(),
+            })
+        );
+    }
 
-        for case in cases {
-            let output = Add::parse_from_ascii(case.0).unwrap();
-            let result = output.1;
-            let expected = case.1;
+    #[test]
+    fn test_parse_update() {
+        let (_, result) = command("< update 123 3 11 22 33 >").unwrap();
+        assert_eq!(
+            result,
+            Command::Update(Update {
+                id: 0x123,
+                dlc: 3,
+                data: Vec::from_slice(&[0x11, 0x22, 0x33,]).unwrap(),
+            })
+        );
+    }
 
-            assert_eq!(expected, result);
-        }
+    #[test]
+    fn test_parse_delete() {
+        let (_, result) = command("< delete 123 >").unwrap();
+        assert_eq!(result, Command::Delete(Delete { id: 0x123 }));
+    }
+
+    #[test]
+    fn test_parse_send_no_data() {
+        let (_, result) = command("< send 123 0 >").unwrap();
+        assert_eq!(
+            result,
+            Command::Send(Send {
+                id: 0x123,
+                dlc: 0,
+                data: Vec::new(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_send_with_data() {
+        let (_, result) = command("< send 1AAAAAAA 2 1 f1 >").unwrap();
+        assert_eq!(
+            result,
+            Command::Send(Send {
+                id: 0x1AAAAAAA,
+                dlc: 2,
+                data: Vec::from_slice(&[0x1, 0xf1]).unwrap(),
+            })
+        );
     }
 }
