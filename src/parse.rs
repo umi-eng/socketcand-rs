@@ -175,11 +175,11 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
 
 #[derive(Debug, PartialEq)]
 pub struct Filter {
-    secs: u32,
-    micros: u32,
-    id: u32,
-    dlc: u8,
-    data: Vec<u8, 64>,
+    pub secs: u32,
+    pub micros: u32,
+    pub id: u32,
+    pub dlc: u8,
+    pub data: Vec<u8, 64>,
 }
 
 fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
@@ -257,7 +257,7 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
 
 #[derive(Debug, PartialEq)]
 pub struct Statistics {
-    interval_millis: u32,
+    pub interval_millis: u32,
 }
 
 fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
