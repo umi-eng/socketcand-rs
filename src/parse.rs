@@ -256,6 +256,24 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Statistics {
+    interval_millis: u32,
+}
+
+fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
+    let (input, (_, interval_millis)) = delimited(
+        tuple((char('<'), space1)),
+        tuple((
+            tag("statistics "),
+            terminated(map_res(digit1, |v: &str| u32::from_str(v)), char(' ')),
+        )),
+        char('>'),
+    )(input)?;
+
+    Ok((input, Statistics { interval_millis }))
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Command<'a> {
     Open(Open<'a>),
     Add(Add),
@@ -267,6 +285,7 @@ pub enum Command<'a> {
     RawMode(RawMode),
     BroadcastMode(BroadcastMode),
     ControlMode(ControlMode),
+    Statistics(Statistics),
 }
 
 pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
@@ -281,6 +300,7 @@ pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
         map(raw_mode, Command::RawMode),
         map(broadcast_mode, Command::BroadcastMode),
         map(control_mode, Command::ControlMode),
+        map(statistics, Command::Statistics),
     ))(input)
 }
 
@@ -395,5 +415,16 @@ mod tests {
     fn parse_control_mode() {
         let (_, result) = command("< controlmode >").unwrap();
         assert_eq!(result, Command::ControlMode(ControlMode));
+    }
+
+    #[test]
+    fn statistics() {
+        let (_, result) = command("< statistics 1000 >").unwrap();
+        assert_eq!(
+            result,
+            Command::Statistics(Statistics {
+                interval_millis: 1000
+            })
+        );
     }
 }
