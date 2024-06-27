@@ -220,6 +220,42 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Echo;
+
+fn echo<'a>(input: &'a str) -> IResult<&'a str, Echo> {
+    let (input, _) = tag("< echo >")(input)?;
+
+    Ok((input, Echo))
+}
+
+#[derive(Debug, PartialEq)]
+pub struct RawMode;
+
+fn raw_mode<'a>(input: &'a str) -> IResult<&'a str, RawMode> {
+    let (input, _) = tag("< rawmode >")(input)?;
+
+    Ok((input, RawMode))
+}
+
+#[derive(Debug, PartialEq)]
+pub struct BroadcastMode;
+
+fn broadcast_mode<'a>(input: &'a str) -> IResult<&'a str, BroadcastMode> {
+    let (input, _) = tag("< bcmode >")(input)?;
+
+    Ok((input, BroadcastMode))
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ControlMode;
+
+fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
+    let (input, _) = tag("< controlmode >")(input)?;
+
+    Ok((input, ControlMode))
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Command<'a> {
     Open(Open<'a>),
     Add(Add),
@@ -227,6 +263,10 @@ pub enum Command<'a> {
     Delete(Delete),
     Send(Send),
     Filter(Filter),
+    Echo(Echo),
+    RawMode(RawMode),
+    BroadcastMode(BroadcastMode),
+    ControlMode(ControlMode),
 }
 
 pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
@@ -237,6 +277,10 @@ pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
         map(delete, Command::Delete),
         map(send, Command::Send),
         map(filter, Command::Filter),
+        map(echo, Command::Echo),
+        map(raw_mode, Command::RawMode),
+        map(broadcast_mode, Command::BroadcastMode),
+        map(control_mode, Command::ControlMode),
     ))(input)
 }
 
@@ -327,5 +371,29 @@ mod tests {
                 data: Vec::from_slice(&[0xFF]).unwrap(),
             })
         );
+    }
+
+    #[test]
+    fn parse_echo() {
+        let (_, result) = command("< echo >").unwrap();
+        assert_eq!(result, Command::Echo(Echo));
+    }
+
+    #[test]
+    fn parse_raw_mode() {
+        let (_, result) = command("< rawmode >").unwrap();
+        assert_eq!(result, Command::RawMode(RawMode));
+    }
+
+    #[test]
+    fn parse_broadcast_mode() {
+        let (_, result) = command("< bcmode >").unwrap();
+        assert_eq!(result, Command::BroadcastMode(BroadcastMode));
+    }
+
+    #[test]
+    fn parse_control_mode() {
+        let (_, result) = command("< controlmode >").unwrap();
+        assert_eq!(result, Command::ControlMode(ControlMode));
     }
 }
