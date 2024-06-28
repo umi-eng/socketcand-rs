@@ -10,7 +10,7 @@ pub struct Frame {}
 #[derive(Debug)]
 enum Mode {
     NoBus,
-    BroadcastManager,
+    Broadcast,
     Raw,
     Control,
     IsoTp,
