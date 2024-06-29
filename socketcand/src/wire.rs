@@ -39,7 +39,7 @@ pub struct Add {
     pub interval_micros: u32,
     pub id: u32,
     pub dlc: u8,
-    pub data: Vec<u8, 64>,
+    pub data: Vec<u8, 8>,
 }
 
 fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
@@ -61,7 +61,7 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
                         bytes
                             .split_whitespace()
                             .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                            .collect::<Vec<u8, 64>>()
+                            .collect::<Vec<u8, 8>>()
                     },
                 ),
             )),
@@ -85,7 +85,7 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
 pub struct Update {
     pub id: u32,
     pub dlc: u8,
-    pub data: Vec<u8, 64>,
+    pub data: Vec<u8, 8>,
 }
 
 fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
@@ -104,7 +104,7 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
                     bytes
                         .split_whitespace()
                         .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                        .collect::<Vec<u8, 64>>()
+                        .collect::<Vec<u8, 8>>()
                 },
             ),
         )),
@@ -141,7 +141,7 @@ fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
 pub struct Send {
     pub id: u32,
     pub dlc: u8,
-    pub data: Vec<u8, 64>,
+    pub data: Vec<u8, 8>,
 }
 
 fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
@@ -163,7 +163,7 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
                         bytes
                             .split_whitespace()
                             .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                            .collect::<Vec<u8, 64>>()
+                            .collect::<Vec<u8, 8>>()
                     }
                 },
             ),
@@ -181,7 +181,7 @@ pub struct Filter {
     pub micros: u32,
     pub id: u32,
     pub dlc: u8,
-    pub data: Vec<u8, 64>,
+    pub data: Vec<u8, 8>,
 }
 
 fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
@@ -202,7 +202,7 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
                     bytes
                         .split_whitespace()
                         .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                        .collect::<Vec<u8, 64>>()
+                        .collect::<Vec<u8, 8>>()
                 },
             ),
         )),
