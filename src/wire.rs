@@ -1,3 +1,4 @@
+//! Wire protocol parsing.
 use core::str::FromStr;
 use heapless::Vec;
 use nom::{
