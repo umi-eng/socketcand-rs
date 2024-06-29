@@ -12,4 +12,4 @@ heapless = "0.8.0"
 nom = { version = "7.1.3", default-features = false }
 
 [features]
-defmt = ["dep:defmt", "heapless/defmt-03"]
+defmt-03 = ["dep:defmt", "heapless/defmt-03"]
