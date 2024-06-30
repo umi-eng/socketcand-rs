@@ -327,8 +327,14 @@ mod tests {
 
     #[test]
     fn parse_open() {
-        let (_, result) = command("< open can0 >").unwrap();
-        assert_eq!(result, Command::Open(Open { interface: "can0" }));
+        let (_, result) = command("< open vcan5 >").unwrap();
+        assert_eq!(
+            result,
+            Command::Open(Open {
+                index: 5,
+                virt: true
+            })
+        );
     }
 
     #[test]
