@@ -3,10 +3,7 @@ use core::str::FromStr;
 use heapless::Vec;
 use nom::{
     branch::alt,
-    bytes::{
-        complete::tag,
-        streaming::{take_while, take_while1},
-    },
+    bytes::{complete::tag, streaming::take_while},
     character::{
         complete::char,
         streaming::{digit1, hex_digit1, space1},
