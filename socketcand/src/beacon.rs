@@ -1,7 +1,7 @@
 //! Service discovery beacon.
 
 use crate::Bus;
-use std::fmt::Formatter;
+use core::fmt::Formatter;
 
 /// Port used for broadcasting service discovery datagrams.
 pub const PORT: u16 = 42000;
