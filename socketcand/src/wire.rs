@@ -18,18 +18,25 @@ use nom::{
 
 /// Open command.
 #[derive(Debug, PartialEq)]
-pub struct Open<'a> {
-    pub interface: &'a str,
+pub struct Open {
+    pub index: u8,
+    pub virt: bool,
 }
 
 fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
-    let (input, interface) = delimited(
-        tuple((char('<'), space1, tag("open"), space1)),
-        take_while1(|c: char| !c.is_whitespace() && c != '>'),
+    let (input, (_, interface_type, index)) = delimited(
+        tuple((char('<'), space1)),
+        tuple((
+            tag("open "),
+            alt((tag("can"), tag("vcan"))),
+            map_res(digit1, u8::from_str),
+        )),
         tuple((space1, char('>'))),
     )(input)?;
 
-    Ok((input, Open { interface }))
+    let virt = interface_type == "vcan";
+
+    Ok((input, Open { index, virt }))
 }
 
 /// Frame job add command.
@@ -284,8 +291,8 @@ fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
 
 /// Command instance.
 #[derive(Debug, PartialEq)]
-pub enum Command<'a> {
-    Open(Open<'a>),
+pub enum Command {
+    Open(Open),
     Add(Add),
     Update(Update),
     Delete(Delete),
