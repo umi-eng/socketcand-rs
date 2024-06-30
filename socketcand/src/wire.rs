@@ -17,7 +17,7 @@ use nom::{
 };
 
 /// Open command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Open {
     pub index: u8,
     pub virt: bool,
@@ -40,7 +40,7 @@ fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
 }
 
 /// Frame job add command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Add {
     pub interval_secs: u32,
     pub interval_micros: u32,
@@ -88,7 +88,7 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
 }
 
 /// Frame job update command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Update {
     pub id: u32,
     pub dlc: u8,
@@ -122,7 +122,7 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
 }
 
 /// Frame job delete command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Delete {
     pub id: u32,
 }
@@ -144,7 +144,7 @@ fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
 }
 
 /// Single frame send command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Send {
     pub id: u32,
     pub dlc: u8,
@@ -182,7 +182,7 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
 }
 
 /// Content filter command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Filter {
     pub secs: u32,
     pub micros: u32,
@@ -229,7 +229,7 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
 }
 
 /// Echo command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Echo;
 
 fn echo<'a>(input: &'a str) -> IResult<&'a str, Echo> {
@@ -239,7 +239,7 @@ fn echo<'a>(input: &'a str) -> IResult<&'a str, Echo> {
 }
 
 /// Enter raw mode command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct RawMode;
 
 fn raw_mode<'a>(input: &'a str) -> IResult<&'a str, RawMode> {
@@ -251,7 +251,7 @@ fn raw_mode<'a>(input: &'a str) -> IResult<&'a str, RawMode> {
 /// Enter broadcast mode command.
 ///
 /// Broadcase mode is the default mode.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct BroadcastMode;
 
 fn broadcast_mode<'a>(input: &'a str) -> IResult<&'a str, BroadcastMode> {
@@ -261,7 +261,7 @@ fn broadcast_mode<'a>(input: &'a str) -> IResult<&'a str, BroadcastMode> {
 }
 
 /// Enter control mode command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ControlMode;
 
 fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
@@ -271,7 +271,7 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
 }
 
 /// Statistics setting command.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Statistics {
     pub interval_millis: u32,
 }
@@ -290,7 +290,7 @@ fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
 }
 
 /// Command instance.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Command {
     Open(Open),
     Add(Add),
