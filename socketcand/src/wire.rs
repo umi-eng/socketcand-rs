@@ -17,7 +17,9 @@ use nom::{
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Open {
+    /// Interface index.
     pub index: u8,
+    /// Virtual interface (e.g. `vcan0`).
     pub virt: bool,
 }
 
@@ -41,10 +43,15 @@ fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Add {
+    /// Send interval seconds.
     pub interval_secs: u32,
+    /// Send interval microseconds.
     pub interval_micros: u32,
+    /// CAN identifier.
     pub id: u32,
+    /// CAN data length code.
     pub dlc: u8,
+    /// CAN data.
     pub data: Vec<u8, 8>,
 }
 
@@ -90,8 +97,11 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Update {
+    /// CAN identifier.
     pub id: u32,
+    /// CAN data length code.
     pub dlc: u8,
+    /// CAN data.
     pub data: Vec<u8, 8>,
 }
 
@@ -125,6 +135,7 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Delete {
+    /// CAN identifier.
     pub id: u32,
 }
 
@@ -148,8 +159,11 @@ fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Send {
+    /// CAN identifier.
     pub id: u32,
+    /// CAN data length code.
     pub dlc: u8,
+    /// CAN data.
     pub data: Vec<u8, 8>,
 }
 
@@ -187,10 +201,15 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Filter {
+    /// Update rate seconds.
     pub secs: u32,
+    /// Update rate microseconds.
     pub micros: u32,
+    /// CAN identifier.
     pub id: u32,
+    /// CAN data length code.
     pub dlc: u8,
+    /// CAN data.
     pub data: Vec<u8, 8>,
 }
 
@@ -281,6 +300,7 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Statistics {
+    /// Send rate milliseconds.
     pub interval_millis: u32,
 }
 
