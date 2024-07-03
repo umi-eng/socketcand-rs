@@ -7,4 +7,4 @@ try:
     msg = bus.recv()
     print(msg)
 except KeyboardInterrupt:
-  pass
+    bus.shutdown()
