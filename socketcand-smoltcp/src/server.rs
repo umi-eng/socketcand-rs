@@ -117,7 +117,7 @@ impl Server {
                         Err(err) => {
                             #[cfg(feature = "defmt-03")]
                             defmt::error!(
-                                "Failed to convert command to utf8: {}",
+                                "Failed to parse command: {}",
                                 defmt::Debug2Format(&err),
                             );
 
