@@ -600,8 +600,7 @@ mod tests {
         assert_eq!(
             result,
             Command::Filter(Filter {
-                secs: 0,
-                micros: 0,
+                interval: Duration::ZERO,
                 id: Id::Standard(StandardId::new(0x123).unwrap()),
                 dlc: 1,
                 data: Vec::from_slice(&[0xFF]).unwrap(),
@@ -639,7 +638,7 @@ mod tests {
         assert_eq!(
             result,
             Command::Statistics(Statistics {
-                interval_millis: 1000
+                interval: Duration::from_secs(1),
             })
         );
     }
