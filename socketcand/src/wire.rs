@@ -507,6 +507,7 @@ pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use embedded_can::Frame;
 
     #[test]
     fn parse_open() {
@@ -536,6 +537,16 @@ mod tests {
                 .unwrap(),
             })
         );
+    }
+
+    #[test]
+    fn parse_add_remote_frame() {
+        let (_, result) = command("< add 1 0 123 8 >").unwrap();
+
+        assert!(match result {
+            Command::Add(add) => add.is_remote_frame(),
+            _ => false,
+        });
     }
 
     #[test]
