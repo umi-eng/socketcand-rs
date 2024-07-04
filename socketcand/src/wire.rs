@@ -8,7 +8,7 @@ use nom::{
         complete::char,
         streaming::{digit1, hex_digit1, space1},
     },
-    combinator::{map, map_res},
+    combinator::{map, map_res, peek},
     sequence::{delimited, terminated, tuple},
     IResult,
 };
@@ -161,6 +161,8 @@ fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
 pub struct Send {
     /// CAN identifier.
     pub id: u32,
+    /// CAN extended identifier.
+    pub extended: bool,
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
@@ -168,10 +170,15 @@ pub struct Send {
 }
 
 fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
-    let (input, (_, id, dlc, data)) = delimited(
+    let (input, (_, extended, id, dlc, data)) = delimited(
         tuple((char('<'), space1)),
         tuple((
             tag("send "),
+            peek(map_res(hex_digit1, |id: &str| match id.len() {
+                8 => Ok(true),
+                3 => Ok(false),
+                _ => Err("Id length incorrect."),
+            })),
             terminated(
                 map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
                 char(' '),
@@ -194,7 +201,15 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
         char('>'),
     )(input)?;
 
-    Ok((input, Send { id, dlc, data }))
+    Ok((
+        input,
+        Send {
+            id,
+            extended,
+            dlc,
+            data,
+        },
+    ))
 }
 
 /// Content filter command.
@@ -411,6 +426,7 @@ mod tests {
             result,
             Command::Send(Send {
                 id: 0x123,
+                extended: false,
                 dlc: 0,
                 data: Vec::new(),
             })
@@ -424,10 +440,17 @@ mod tests {
             result,
             Command::Send(Send {
                 id: 0x1AAAAAAA,
+                extended: true,
                 dlc: 2,
                 data: Vec::from_slice(&[0x1, 0xf1]).unwrap(),
             })
         );
+    }
+
+    #[test]
+    fn parse_send_id_length_incorrect() {
+        let result = command("< send 1234 0 >");
+        assert!(result.is_err());
     }
 
     #[test]
