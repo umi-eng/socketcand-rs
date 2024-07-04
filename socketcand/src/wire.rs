@@ -327,23 +327,35 @@ fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
     Ok((input, Statistics { interval }))
 }
 
-/// Command instance.
+/// Command.
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub enum Command {
+    /// Open command.
     Open(Open),
+    /// Add command.
     Add(Add),
+    /// Update command.
     Update(Update),
+    /// Delete command.
     Delete(Delete),
+    /// Send command.
     Send(Send),
+    /// Filter command.
     Filter(Filter),
+    /// Echo command.
     Echo(Echo),
+    /// Raw mode command.
     RawMode(RawMode),
+    /// Broadcast mode command.
     BroadcastMode(BroadcastMode),
+    /// Control mode command.
     ControlMode(ControlMode),
+    /// Statistics command.
     Statistics(Statistics),
 }
 
+/// Parse a socketcand command.
 pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
     alt((
         map(open, Command::Open),
