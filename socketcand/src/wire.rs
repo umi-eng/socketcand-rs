@@ -122,7 +122,7 @@ impl embedded_can::Frame for Add {
     }
 
     fn is_remote_frame(&self) -> bool {
-        false
+        self.dlc > 0 && self.data.is_empty()
     }
 }
 
@@ -201,7 +201,7 @@ impl embedded_can::Frame for Update {
     }
 
     fn is_remote_frame(&self) -> bool {
-        false
+        self.dlc > 0 && self.data.is_empty()
     }
 }
 
@@ -282,7 +282,7 @@ impl embedded_can::Frame for Send {
     }
 
     fn is_remote_frame(&self) -> bool {
-        false
+        self.dlc > 0 && self.data.is_empty()
     }
 }
 
@@ -355,7 +355,7 @@ impl embedded_can::Frame for Filter {
     }
 
     fn is_remote_frame(&self) -> bool {
-        false
+        self.dlc > 0 && self.data.is_empty()
     }
 }
 
