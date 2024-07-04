@@ -93,6 +93,39 @@ pub struct Add {
     pub data: Vec<u8, 8>,
 }
 
+impl embedded_can::Frame for Add {
+    fn new(_id: impl Into<Id>, _data: &[u8]) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn new_remote(_id: impl Into<Id>, _dlc: usize) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn id(&self) -> Id {
+        self.id
+    }
+
+    fn dlc(&self) -> usize {
+        self.dlc as usize
+    }
+
+    fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    fn is_extended(&self) -> bool {
+        match self.id {
+            Id::Extended(_) => true,
+            Id::Standard(_) => false,
+        }
+    }
+
+    fn is_remote_frame(&self) -> bool {
+        false
+    }
+}
+
 fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
     let (input, (secs, micros, id, dlc, data)) = delimited(
         tag("< add "),
@@ -137,6 +170,39 @@ pub struct Update {
     pub dlc: u8,
     /// CAN data.
     pub data: Vec<u8, 8>,
+}
+
+impl embedded_can::Frame for Update {
+    fn new(_id: impl Into<Id>, _data: &[u8]) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn new_remote(_id: impl Into<Id>, _dlc: usize) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn id(&self) -> Id {
+        self.id
+    }
+
+    fn dlc(&self) -> usize {
+        self.dlc as usize
+    }
+
+    fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    fn is_extended(&self) -> bool {
+        match self.id {
+            Id::Extended(_) => true,
+            Id::Standard(_) => false,
+        }
+    }
+
+    fn is_remote_frame(&self) -> bool {
+        false
+    }
 }
 
 fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
@@ -187,6 +253,39 @@ pub struct Send {
     pub data: Vec<u8, 8>,
 }
 
+impl embedded_can::Frame for Send {
+    fn new(_id: impl Into<Id>, _data: &[u8]) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn new_remote(_id: impl Into<Id>, _dlc: usize) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn id(&self) -> Id {
+        self.id
+    }
+
+    fn dlc(&self) -> usize {
+        self.dlc as usize
+    }
+
+    fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    fn is_extended(&self) -> bool {
+        match self.id {
+            Id::Extended(_) => true,
+            Id::Standard(_) => false,
+        }
+    }
+
+    fn is_remote_frame(&self) -> bool {
+        false
+    }
+}
+
 fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
     let (input, (id, dlc, data)) = delimited(
         tag("< send "),
@@ -225,6 +324,39 @@ pub struct Filter {
     pub dlc: u8,
     /// CAN data.
     pub data: Vec<u8, 8>,
+}
+
+impl embedded_can::Frame for Filter {
+    fn new(_id: impl Into<Id>, _data: &[u8]) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn new_remote(_id: impl Into<Id>, _dlc: usize) -> Option<Self> {
+        unimplemented!()
+    }
+
+    fn id(&self) -> Id {
+        self.id
+    }
+
+    fn dlc(&self) -> usize {
+        self.dlc as usize
+    }
+
+    fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    fn is_extended(&self) -> bool {
+        match self.id {
+            Id::Extended(_) => true,
+            Id::Standard(_) => false,
+        }
+    }
+
+    fn is_remote_frame(&self) -> bool {
+        false
+    }
 }
 
 fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
