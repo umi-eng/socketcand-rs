@@ -3,8 +3,11 @@
 A socketcand parser implementation built with [`nom`](https://docs.rs/nom). Designed for `no_std` environments and implements [`embedded-can`](https://docs.rs/embedded-can) traits.
 
 ```rust
+use socketcand::wire::command;
+
 let input = "< send 123 0 >";
 let (_, result) = command(input).unwrap();
+
 println!("{:?}", result);
 ```
 
