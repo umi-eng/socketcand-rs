@@ -64,14 +64,13 @@ pub struct Open {
 }
 
 fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
-    let (input, (_, interface_type, index)) = delimited(
-        tuple((char('<'), space1)),
+    let (input, (interface_type, index)) = delimited(
+        tag("< open "),
         tuple((
-            tag("open "),
             alt((tag("can"), tag("vcan"))),
             map_res(digit1, u8::from_str),
         )),
-        tuple((space1, char('>'))),
+        tag(" >"),
     )(input)?;
 
     let virt = interface_type == "vcan";
@@ -96,27 +95,25 @@ pub struct Add {
 }
 
 fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
-    let (input, (_, interval_secs, interval_micros, id, dlc, data)) =
-        delimited(
-            tuple((char('<'), space1)),
-            tuple((
-                tag("add "),
-                terminated(map_res(digit1, u32::from_str), char(' ')),
-                terminated(map_res(digit1, u32::from_str), char(' ')),
-                id,
-                terminated(map_res(digit1, u8::from_str), char(' ')),
-                map(
-                    take_while(|c: char| c.is_digit(16) || c == ' '),
-                    |bytes: &str| {
-                        bytes
-                            .split_whitespace()
-                            .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                            .collect::<Vec<u8, 8>>()
-                    },
-                ),
-            )),
-            char('>'),
-        )(input)?;
+    let (input, (interval_secs, interval_micros, id, dlc, data)) = delimited(
+        tag("< add "),
+        tuple((
+            terminated(map_res(digit1, u32::from_str), char(' ')),
+            terminated(map_res(digit1, u32::from_str), char(' ')),
+            id,
+            terminated(map_res(digit1, u8::from_str), char(' ')),
+            map(
+                take_while(|c: char| c.is_digit(16) || c == ' '),
+                |bytes: &str| {
+                    bytes
+                        .split_whitespace()
+                        .filter_map(|b| u8::from_str_radix(b, 16).ok())
+                        .collect::<Vec<u8, 8>>()
+                },
+            ),
+        )),
+        char('>'),
+    )(input)?;
 
     Ok((
         input,
@@ -143,10 +140,9 @@ pub struct Update {
 }
 
 fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
-    let (input, (_, id, dlc, data)) = delimited(
-        tuple((char('<'), space1)),
+    let (input, (id, dlc, data)) = delimited(
+        tag("< update "),
         tuple((
-            tag("update "),
             id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
@@ -174,11 +170,7 @@ pub struct Delete {
 }
 
 fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
-    let (input, (_, id)) = delimited(
-        tuple((char('<'), space1)),
-        tuple((tag("delete "), id)),
-        char('>'),
-    )(input)?;
+    let (input, id) = delimited(tag("< delete "), id, char('>'))(input)?;
 
     Ok((input, Delete { id }))
 }
@@ -196,10 +188,9 @@ pub struct Send {
 }
 
 fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
-    let (input, (_, id, dlc, data)) = delimited(
-        tuple((char('<'), space1)),
+    let (input, (id, dlc, data)) = delimited(
+        tag("< send "),
         tuple((
-            tag("send "),
             id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
@@ -239,10 +230,9 @@ pub struct Filter {
 }
 
 fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
-    let (input, (_, secs, micros, id, dlc, data)) = delimited(
-        tuple((char('<'), space1)),
+    let (input, (secs, micros, id, dlc, data)) = delimited(
+        tag("< filter "),
         tuple((
-            tag("filter "),
             terminated(map_res(digit1, u32::from_str), char(' ')),
             terminated(map_res(digit1, u32::from_str), char(' ')),
             id,
@@ -327,12 +317,9 @@ pub struct Statistics {
 }
 
 fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
-    let (input, (_, interval_millis)) = delimited(
-        tuple((char('<'), space1)),
-        tuple((
-            tag("statistics "),
-            terminated(map_res(digit1, |v: &str| u32::from_str(v)), char(' ')),
-        )),
+    let (input, interval_millis) = delimited(
+        tag("< statistics "),
+        terminated(map_res(digit1, |v: &str| u32::from_str(v)), char(' ')),
         char('>'),
     )(input)?;
 
