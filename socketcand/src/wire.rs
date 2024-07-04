@@ -1,5 +1,6 @@
 //! Wire protocol parsing.
 use core::str::FromStr;
+use core::time::Duration;
 use embedded_can::{ExtendedId, Id, StandardId};
 use heapless::Vec;
 use nom::{
@@ -82,10 +83,8 @@ fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Add {
-    /// Send interval seconds.
-    pub interval_secs: u32,
-    /// Send interval microseconds.
-    pub interval_micros: u32,
+    /// Interval.
+    pub interval: Duration,
     /// CAN identifier.
     pub id: Id,
     /// CAN data length code.
@@ -95,11 +94,11 @@ pub struct Add {
 }
 
 fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
-    let (input, (interval_secs, interval_micros, id, dlc, data)) = delimited(
+    let (input, (secs, micros, id, dlc, data)) = delimited(
         tag("< add "),
         tuple((
-            terminated(map_res(digit1, u32::from_str), char(' ')),
-            terminated(map_res(digit1, u32::from_str), char(' ')),
+            terminated(map_res(digit1, u64::from_str), char(' ')),
+            terminated(map_res(digit1, u64::from_str), char(' ')),
             id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
@@ -115,11 +114,12 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
         char('>'),
     )(input)?;
 
+    let interval = Duration::from_secs(secs) + Duration::from_micros(micros);
+
     Ok((
         input,
         Add {
-            interval_secs,
-            interval_micros,
+            interval,
             id,
             dlc,
             data,
@@ -217,10 +217,8 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Filter {
-    /// Update rate seconds.
-    pub secs: u32,
-    /// Update rate microseconds.
-    pub micros: u32,
+    /// Update rate.
+    pub interval: Duration,
     /// CAN identifier.
     pub id: Id,
     /// CAN data length code.
@@ -233,8 +231,8 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
     let (input, (secs, micros, id, dlc, data)) = delimited(
         tag("< filter "),
         tuple((
-            terminated(map_res(digit1, u32::from_str), char(' ')),
-            terminated(map_res(digit1, u32::from_str), char(' ')),
+            terminated(map_res(digit1, u64::from_str), char(' ')),
+            terminated(map_res(digit1, u64::from_str), char(' ')),
             id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
@@ -250,11 +248,12 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
         char('>'),
     )(input)?;
 
+    let interval = Duration::from_secs(secs) + Duration::from_micros(micros);
+
     Ok((
         input,
         Filter {
-            secs,
-            micros,
+            interval,
             id,
             dlc,
             data,
@@ -313,17 +312,19 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Statistics {
     /// Send rate milliseconds.
-    pub interval_millis: u32,
+    pub interval: Duration,
 }
 
 fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
-    let (input, interval_millis) = delimited(
+    let (input, millis) = delimited(
         tag("< statistics "),
-        terminated(map_res(digit1, |v: &str| u32::from_str(v)), char(' ')),
+        terminated(map_res(digit1, |v: &str| u64::from_str(v)), char(' ')),
         char('>'),
     )(input)?;
 
-    Ok((input, Statistics { interval_millis }))
+    let interval = Duration::from_millis(millis);
+
+    Ok((input, Statistics { interval }))
 }
 
 /// Command instance.
@@ -382,8 +383,7 @@ mod tests {
         assert_eq!(
             result,
             Command::Add(Add {
-                interval_secs: 1,
-                interval_micros: 0,
+                interval: Duration::from_secs(1),
                 id: Id::Standard(StandardId::new(0x123).unwrap()),
                 dlc: 8,
                 data: Vec::from_slice(&[
