@@ -7,7 +7,7 @@ use nom::{
     bytes::{complete::tag, streaming::take_while},
     character::{
         complete::char,
-        streaming::{digit1, hex_digit1, space1},
+        streaming::{digit1, hex_digit1},
     },
     combinator::{map, map_res, peek},
     sequence::{delimited, terminated, tuple},
