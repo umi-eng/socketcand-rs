@@ -1,5 +1,6 @@
 //! Wire protocol parsing.
 use core::str::FromStr;
+use embedded_can::{ExtendedId, Id, StandardId};
 use heapless::Vec;
 use nom::{
     branch::alt,
@@ -12,6 +13,45 @@ use nom::{
     sequence::{delimited, terminated, tuple},
     IResult,
 };
+
+/// Parse CAN id.
+fn id(input: &str) -> IResult<&str, Id> {
+    let (input, (extended, id)) = tuple((
+        peek(map_res(hex_digit1, |id: &str| match id.len() {
+            8 => Ok(true),
+            3 => Ok(false),
+            _ => Err("Id length incorrect."),
+        })),
+        terminated(
+            map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
+            char(' '),
+        ),
+    ))(input)?;
+
+    let id = if extended {
+        match ExtendedId::new(id) {
+            Some(id) => Id::Extended(id),
+            None => {
+                return Err(nom::Err::Error(nom::error::Error::new(
+                    input,
+                    nom::error::ErrorKind::MapRes,
+                )))
+            }
+        }
+    } else {
+        match StandardId::new(id as u16) {
+            Some(id) => Id::Standard(id),
+            None => {
+                return Err(nom::Err::Error(nom::error::Error::new(
+                    input,
+                    nom::error::ErrorKind::MapRes,
+                )))
+            }
+        }
+    };
+
+    Ok((input, id))
+}
 
 /// Open command.
 #[derive(Debug, PartialEq, Clone)]
@@ -48,7 +88,7 @@ pub struct Add {
     /// Send interval microseconds.
     pub interval_micros: u32,
     /// CAN identifier.
-    pub id: u32,
+    pub id: Id,
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
@@ -63,10 +103,7 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
                 tag("add "),
                 terminated(map_res(digit1, u32::from_str), char(' ')),
                 terminated(map_res(digit1, u32::from_str), char(' ')),
-                terminated(
-                    map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                    char(' '),
-                ),
+                id,
                 terminated(map_res(digit1, u8::from_str), char(' ')),
                 map(
                     take_while(|c: char| c.is_digit(16) || c == ' '),
@@ -98,7 +135,7 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Update {
     /// CAN identifier.
-    pub id: u32,
+    pub id: Id,
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
@@ -110,10 +147,7 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
         tuple((char('<'), space1)),
         tuple((
             tag("update "),
-            terminated(
-                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                char(' '),
-            ),
+            id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
                 take_while(|c: char| c.is_digit(16) || c == ' '),
@@ -136,19 +170,13 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Delete {
     /// CAN identifier.
-    pub id: u32,
+    pub id: Id,
 }
 
 fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
     let (input, (_, id)) = delimited(
         tuple((char('<'), space1)),
-        tuple((
-            tag("delete "),
-            terminated(
-                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                char(' '),
-            ),
-        )),
+        tuple((tag("delete "), id)),
         char('>'),
     )(input)?;
 
@@ -160,9 +188,7 @@ fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Send {
     /// CAN identifier.
-    pub id: u32,
-    /// CAN extended identifier.
-    pub extended: bool,
+    pub id: Id,
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
@@ -170,19 +196,11 @@ pub struct Send {
 }
 
 fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
-    let (input, (_, extended, id, dlc, data)) = delimited(
+    let (input, (_, id, dlc, data)) = delimited(
         tuple((char('<'), space1)),
         tuple((
             tag("send "),
-            peek(map_res(hex_digit1, |id: &str| match id.len() {
-                8 => Ok(true),
-                3 => Ok(false),
-                _ => Err("Id length incorrect."),
-            })),
-            terminated(
-                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                char(' '),
-            ),
+            id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
                 take_while(|c: char| c.is_digit(16) || c == ' '),
@@ -201,15 +219,7 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
         char('>'),
     )(input)?;
 
-    Ok((
-        input,
-        Send {
-            id,
-            extended,
-            dlc,
-            data,
-        },
-    ))
+    Ok((input, Send { id, dlc, data }))
 }
 
 /// Content filter command.
@@ -221,7 +231,7 @@ pub struct Filter {
     /// Update rate microseconds.
     pub micros: u32,
     /// CAN identifier.
-    pub id: u32,
+    pub id: Id,
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
@@ -235,10 +245,7 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
             tag("filter "),
             terminated(map_res(digit1, u32::from_str), char(' ')),
             terminated(map_res(digit1, u32::from_str), char(' ')),
-            terminated(
-                map_res(hex_digit1, |id: &str| u32::from_str_radix(id, 16)),
-                char(' '),
-            ),
+            id,
             terminated(map_res(digit1, u8::from_str), char(' ')),
             map(
                 take_while(|c: char| c.is_digit(16) || c == ' '),
@@ -390,7 +397,7 @@ mod tests {
             Command::Add(Add {
                 interval_secs: 1,
                 interval_micros: 0,
-                id: 0x123,
+                id: Id::Standard(StandardId::new(0x123).unwrap()),
                 dlc: 8,
                 data: Vec::from_slice(&[
                     0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88
@@ -406,7 +413,7 @@ mod tests {
         assert_eq!(
             result,
             Command::Update(Update {
-                id: 0x123,
+                id: Id::Standard(StandardId::new(0x123).unwrap()),
                 dlc: 3,
                 data: Vec::from_slice(&[0x11, 0x22, 0x33,]).unwrap(),
             })
@@ -416,7 +423,12 @@ mod tests {
     #[test]
     fn parse_delete() {
         let (_, result) = command("< delete 123 >").unwrap();
-        assert_eq!(result, Command::Delete(Delete { id: 0x123 }));
+        assert_eq!(
+            result,
+            Command::Delete(Delete {
+                id: Id::Standard(StandardId::new(0x123).unwrap())
+            })
+        );
     }
 
     #[test]
@@ -425,8 +437,7 @@ mod tests {
         assert_eq!(
             result,
             Command::Send(Send {
-                id: 0x123,
-                extended: false,
+                id: Id::Standard(StandardId::new(0x123).unwrap()),
                 dlc: 0,
                 data: Vec::new(),
             })
@@ -439,8 +450,7 @@ mod tests {
         assert_eq!(
             result,
             Command::Send(Send {
-                id: 0x1AAAAAAA,
-                extended: true,
+                id: Id::Extended(ExtendedId::new(0x1AAAAAAA).unwrap()),
                 dlc: 2,
                 data: Vec::from_slice(&[0x1, 0xf1]).unwrap(),
             })
@@ -461,7 +471,7 @@ mod tests {
             Command::Filter(Filter {
                 secs: 0,
                 micros: 0,
-                id: 0x123,
+                id: Id::Standard(StandardId::new(0x123).unwrap()),
                 dlc: 1,
                 data: Vec::from_slice(&[0xFF]).unwrap(),
             })
