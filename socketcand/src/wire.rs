@@ -84,7 +84,6 @@ fn open<'a>(input: &'a str) -> IResult<&'a str, Open> {
 
 /// Frame job add command.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Add {
     /// Interval.
     pub interval: Duration,
@@ -165,7 +164,6 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
 
 /// Frame job update command.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Update {
     /// CAN identifier.
     pub id: Id,
@@ -232,7 +230,6 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
 
 /// Frame job delete command.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Delete {
     /// CAN identifier.
     pub id: Id,
@@ -246,7 +243,6 @@ fn delete<'a>(input: &'a str) -> IResult<&'a str, Delete> {
 
 /// Single frame send command.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Send {
     /// CAN identifier.
     pub id: Id,
@@ -317,7 +313,6 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
 
 /// Content filter command.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Filter {
     /// Update rate.
     pub interval: Duration,
@@ -475,7 +470,6 @@ fn statistics<'a>(input: &'a str) -> IResult<&'a str, Statistics> {
 
 /// Command.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub enum Command {
     /// Open command.
     Open(Open),
