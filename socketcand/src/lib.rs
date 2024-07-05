@@ -17,8 +17,8 @@ pub mod wire;
 /// ```rust
 /// use socketcand::Bus;
 ///
-/// let bus = Bus::new(0, false); // same as `can0`
-/// let bus = Bus::new_virtual(7, true); // same as `vcan7`
+/// let bus = Bus::new(0); // same as `can0`
+/// let bus = Bus::new_virtual(7); // same as `vcan7`
 /// ```
 #[derive(Debug, Clone)]
 pub struct Bus {
