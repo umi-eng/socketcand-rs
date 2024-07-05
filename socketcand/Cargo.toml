@@ -2,6 +2,7 @@
 name = "socketcand"
 description = "Socketcand parser for small systems"
 repository = "https://github.com/umi-eng/socketcand-rs"
+documentation = "https://docs.rs/socketcand"
 readme = "README.md"
 license = "MPL-2.0"
 version = "0.1.0"
