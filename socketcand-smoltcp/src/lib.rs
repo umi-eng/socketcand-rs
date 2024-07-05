@@ -4,7 +4,7 @@ mod server;
 
 pub use server::Server;
 
-/// Socketcand port.
+/// Socketcand TCP port.
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub struct Port(pub u16);
