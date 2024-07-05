@@ -15,6 +15,9 @@ use nom::{
     IResult,
 };
 
+/// Maximum frame data length.
+const MAX_FRAME_DATA_LEN: usize = 8;
+
 /// Parse CAN id.
 fn id(input: &str) -> IResult<&str, Id> {
     let (input, (extended, id)) = tuple((
@@ -90,7 +93,7 @@ pub struct Add {
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
-    pub data: Vec<u8, 8>,
+    pub data: Vec<u8, MAX_FRAME_DATA_LEN>,
 }
 
 impl embedded_can::Frame for Add {
@@ -140,7 +143,7 @@ fn add<'a>(input: &'a str) -> IResult<&'a str, Add> {
                     bytes
                         .split_whitespace()
                         .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                        .collect::<Vec<u8, 8>>()
+                        .collect()
                 },
             ),
         )),
@@ -169,7 +172,7 @@ pub struct Update {
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
-    pub data: Vec<u8, 8>,
+    pub data: Vec<u8, MAX_FRAME_DATA_LEN>,
 }
 
 impl embedded_can::Frame for Update {
@@ -217,7 +220,7 @@ fn update<'a>(input: &'a str) -> IResult<&'a str, Update> {
                     bytes
                         .split_whitespace()
                         .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                        .collect::<Vec<u8, 8>>()
+                        .collect()
                 },
             ),
         )),
@@ -250,7 +253,7 @@ pub struct Send {
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
-    pub data: Vec<u8, 8>,
+    pub data: Vec<u8, MAX_FRAME_DATA_LEN>,
 }
 
 impl embedded_can::Frame for Send {
@@ -301,7 +304,7 @@ fn send<'a>(input: &'a str) -> IResult<&'a str, Send> {
                         bytes
                             .split_whitespace()
                             .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                            .collect::<Vec<u8, 8>>()
+                            .collect()
                     }
                 },
             ),
@@ -323,7 +326,7 @@ pub struct Filter {
     /// CAN data length code.
     pub dlc: u8,
     /// CAN data.
-    pub data: Vec<u8, 8>,
+    pub data: Vec<u8, MAX_FRAME_DATA_LEN>,
 }
 
 impl embedded_can::Frame for Filter {
@@ -373,7 +376,7 @@ fn filter<'a>(input: &'a str) -> IResult<&'a str, Filter> {
                     bytes
                         .split_whitespace()
                         .filter_map(|b| u8::from_str_radix(b, 16).ok())
-                        .collect::<Vec<u8, 8>>()
+                        .collect()
                 },
             ),
         )),
