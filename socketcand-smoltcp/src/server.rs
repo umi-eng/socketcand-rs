@@ -21,14 +21,14 @@ use socketcand::{
 pub struct ConnectionState {
     /// has the < hi > welcome response been sent
     welcome: bool,
-    mode: Mode,
+    mode: Option<Mode>,
 }
 
 impl Default for ConnectionState {
     fn default() -> Self {
         ConnectionState {
             welcome: false,
-            mode: Mode::NoBus,
+            mode: None,
         }
     }
 }
@@ -142,11 +142,11 @@ impl Server {
         if let Some(ref cmd) = cmd {
             match cmd {
                 Command::Open(_) => {
-                    self.state.mode = Mode::Broadcast;
+                    self.state.mode = Some(Mode::Broadcast);
                     socket.send_slice("< ok >".as_bytes()).ok();
                 }
                 Command::RawMode(_) => {
-                    self.state.mode = Mode::Raw;
+                    self.state.mode = Some(Mode::Raw);
                     socket.send_slice("< ok >".as_bytes()).ok();
                 }
                 _ => {}

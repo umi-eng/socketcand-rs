@@ -70,12 +70,9 @@ impl defmt::Format for Bus {
 }
 
 /// Connection mode.
-#[derive(Debug, Default, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 pub enum Mode {
-    #[default]
-    /// No bus.
-    NoBus,
     /// Broadcast mode.
     Broadcast,
     /// Raw mode.
