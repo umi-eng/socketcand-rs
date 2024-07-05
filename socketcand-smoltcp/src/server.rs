@@ -167,7 +167,7 @@ impl Server {
 
         self.handle_socket(socket);
 
-        if socket.may_send() && self.state.mode == Mode::Raw {
+        if socket.may_send() && self.state.mode == Some(Mode::Raw) {
             let mut out = String::<128>::new();
 
             write!(&mut out, "< frame ",).unwrap();
