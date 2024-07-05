@@ -149,6 +149,14 @@ impl Server {
                     self.state.mode = Some(Mode::Raw);
                     socket.send_slice("< ok >".as_bytes()).ok();
                 }
+                Command::BroadcastMode(_) => {
+                    self.state.mode = Some(Mode::Broadcast);
+                    socket.send_slice("< ok >".as_bytes()).ok();
+                }
+                Command::ControlMode(_) => {
+                    self.state.mode = Some(Mode::Control);
+                    socket.send_slice("< ok >".as_bytes()).ok();
+                }
                 _ => {}
             }
         }
