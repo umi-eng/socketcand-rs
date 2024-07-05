@@ -442,6 +442,17 @@ fn control_mode<'a>(input: &'a str) -> IResult<&'a str, ControlMode> {
     Ok((input, ControlMode))
 }
 
+/// Enter ISO-TP mode command.
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
+pub struct IsoTpMode;
+
+fn iso_tp_mode<'a>(input: &'a str) -> IResult<&'a str, IsoTpMode> {
+    let (input, _) = tag("< isotpmode >")(input)?;
+
+    Ok((input, IsoTpMode))
+}
+
 /// Statistics setting command.
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
@@ -486,6 +497,8 @@ pub enum Command {
     BroadcastMode(BroadcastMode),
     /// Control mode command.
     ControlMode(ControlMode),
+    /// ISO-TP mode command.
+    IsoTpMode(IsoTpMode),
     /// Statistics command.
     Statistics(Statistics),
 }
@@ -503,6 +516,7 @@ pub fn command<'a>(input: &'a str) -> IResult<&'a str, Command> {
         map(raw_mode, Command::RawMode),
         map(broadcast_mode, Command::BroadcastMode),
         map(control_mode, Command::ControlMode),
+        map(iso_tp_mode, Command::IsoTpMode),
         map(statistics, Command::Statistics),
     ))(input)
 }
@@ -644,6 +658,12 @@ mod tests {
     fn parse_control_mode() {
         let (_, result) = command("< controlmode >").unwrap();
         assert_eq!(result, Command::ControlMode(ControlMode));
+    }
+
+    #[test]
+    fn parse_iso_tp_mode() {
+        let (_, result) = command("< isotpmode >").unwrap();
+        assert_eq!(result, Command::IsoTpMode(IsoTpMode));
     }
 
     #[test]
