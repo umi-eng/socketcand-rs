@@ -14,7 +14,7 @@ pub fn format(
     description: Option<&str>,
     ip: core::net::IpAddr,
     port: u16,
-    busses: &'_ [Bus<'_>],
+    busses: &[Bus],
 ) -> core::fmt::Result {
     write!(fmt, r#"<CANBeacon name="{}" type="{}""#, name, device_kind)?;
 
@@ -27,7 +27,7 @@ pub fn format(
     write!(fmt, "\t<URL>can://{}:{}</URL>", ip, port)?;
 
     for bus in busses {
-        write!(fmt, r#"\t<Bus name="{}">"#, bus.name)?;
+        write!(fmt, r#"\t<Bus name="{}">"#, bus)?;
     }
 
     write!(fmt, "</CANBeacon>")
